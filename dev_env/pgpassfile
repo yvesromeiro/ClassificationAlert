@@ -1,1 +1,1 @@
-postgres:5432:katana_db:myuser:secret
+postgres:5432:myuser:myuser:secret
