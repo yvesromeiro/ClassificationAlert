@@ -22,60 +22,64 @@ def generate_document_id(length=12, prefix="", suffix=""):
 
 ### MODELO DO BANCO USERSDB ###
 
-# Modelo de Tabela: Usuários
+# Modelo de Tabela: Usuários com row_id e user_state
 class User(Base):
     __tablename__ = 'users'
 
-    id = Column(String, primary_key=True)
+    row_id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(String, unique=True)  # Certifique-se de que user_id está definido corretamente
     name = Column(String)
     email = Column(String)
     birthdate = Column(Date)
     document = Column(String)
     gender = Column(String)
     telephone = Column(String)
-    is_active = Column(Boolean)
+    user_state = Column(String)  # Renomeando de is_active para user_state
     yearly_income = Column(Float)
 
 # Função para gerar um usuário falso para o 'usersdb'
 def generate_fake_user():
     fake = Faker('en-US')
     return User(
-        id=str(uuid.uuid4()),
+        user_id=str(uuid.uuid4()),
         name=fake.name(),
         email=fake.email(),
         birthdate=fake.date_of_birth(),
         document=generate_document_id(length=15, prefix="DOC-", suffix=""),
         gender=random.choice(["Male", "Female"]),
         telephone=fake.phone_number(),
-        is_active=fake.boolean(chance_of_getting_true=50),
+        user_state=random.choice(["active", "inactive", "pending"]),  # Renomeando de is_active
         yearly_income=round(random.uniform(50000, 320000), 2)
     )
 
 ### MODELO DO BANCO MARKETINGDB ###
 
-# Modelo de Tabela: Campanhas de Marketing
+# Modelo de Tabela: Campanhas de Marketing com row_id e user_state
 class MarketingCampaign(Base):
     __tablename__ = 'marketing_campaigns'
 
-    id = Column(String, primary_key=True)
+    row_id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(String, unique=True)  # Certifique-se de que user_id está definido corretamente
     name = Column(String)
     start_date = Column(Date)
     end_date = Column(Date)
     channel = Column(String)  # Ex: email, social media, search engine, etc.
     budget = Column(Float)
     target_audience = Column(String)
+    user_state = Column(String)  # Estado da campanha (ativo, inativo, etc.)
 
 # Função para gerar uma campanha de marketing falsa para o 'marketingdb'
 def generate_fake_marketing_campaign():
     fake = Faker('en-US')
     return MarketingCampaign(
-        id=str(uuid.uuid4()),
+        user_id=str(uuid.uuid4()),  # Aqui também user_id
         name=fake.bs().title(),
         start_date=fake.date_this_year(),
         end_date=fake.date_this_year(),
         channel=random.choice(["email", "social media", "SMS", "search engine"]),
         budget=round(random.uniform(1000, 50000), 2),
-        target_audience=random.choice(["Teens", "Adults", "Seniors"])
+        target_audience=random.choice(["Teens", "Adults", "Seniors"]),
+        user_state=random.choice(["active", "inactive", "pending"])  # Estado da campanha
     )
 
 # Função para obter a string de conexão do banco de dados
@@ -90,11 +94,13 @@ def get_connection_string(database):
 # Preparar o banco de dados 'usersdb'
 def prepare_users_database():
     engine = create_engine(get_connection_string("usersdb"))
+    Base.metadata.drop_all(engine)  # Garantir que o esquema anterior seja removido
     Base.metadata.create_all(engine)
 
 # Preparar o banco de dados 'marketingdb'
 def prepare_marketing_database():
     engine = create_engine(get_connection_string("marketingdb"))
+    Base.metadata.drop_all(engine)  # Garantir que o esquema anterior seja removido
     Base.metadata.create_all(engine)
 
 # Sessão de banco de dados para 'usersdb'
